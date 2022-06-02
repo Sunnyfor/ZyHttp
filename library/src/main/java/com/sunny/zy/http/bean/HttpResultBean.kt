@@ -1,6 +1,6 @@
 package com.sunny.zy.http.bean
 
-import com.sunny.zy.utils.LogUtil
+import com.sunny.zy.utils.HttpLogUtil
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 
@@ -29,7 +29,7 @@ abstract class HttpResultBean<T> : BaseHttpResultBean() {
             if (message.isEmpty() || message == "OK")
                 return true
         }
-        LogUtil.e(message)
+        HttpLogUtil.e(message)
         return false
     }
 

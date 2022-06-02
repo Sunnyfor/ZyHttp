@@ -10,7 +10,7 @@ import com.sunny.zy.http.bean.WebSocketResultBean
 import com.sunny.zy.http.request.ZyRequest
 import com.sunny.zy.http.response.DefaultHttpExecute
 import com.sunny.zy.http.response.IHttpExecute
-import com.sunny.zy.utils.LogUtil
+import com.sunny.zy.utils.HttpLogUtil
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -207,7 +207,7 @@ object ZyHttp {
             //出现异常获取异常信息
             httpResultBean.exception = e
             httpResultBean.message = e.message ?: ""
-            LogUtil.e("发生异常->:$httpResultBean")
+            HttpLogUtil.e("发生异常->:$httpResultBean")
         }
 
         withContext(Dispatchers.Main) {

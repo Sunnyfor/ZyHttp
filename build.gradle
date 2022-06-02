@@ -5,8 +5,6 @@ plugins {
     id 'org.jetbrains.kotlin.android' version '1.6.21' apply false
 }
 
-ext.sdkVersion = "1.0.0"
-
 task clean(type: Delete) {
     delete rootProject.buildDir
 }

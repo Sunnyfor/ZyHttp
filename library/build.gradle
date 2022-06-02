@@ -4,9 +4,6 @@ plugins {
     id 'maven-publish'
 }
 
-group = 'com.github.Sunnyfor'
-version = '1.0.0'
-
 android {
     compileSdk 32
 
@@ -55,9 +52,8 @@ afterEvaluate {
                 from components.release
                 groupId = 'com.github.Sunnyfor'
                 artifactId = 'zyhttp'
-                version = rootProject.version
+                version = '1.0.1'
             }
-
         }
     }
 }

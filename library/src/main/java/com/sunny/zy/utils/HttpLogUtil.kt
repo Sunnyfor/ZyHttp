@@ -9,7 +9,7 @@ import com.sunny.zy.ZyHttpConfig
  * Mail sunnyfor98@gmail.com
  * Date 2021/6/30
  */
-object LogUtil {
+object HttpLogUtil {
 
     const val VERBOSE = 0
 
