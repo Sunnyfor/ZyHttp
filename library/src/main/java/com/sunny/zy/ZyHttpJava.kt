@@ -4,8 +4,6 @@ import com.sunny.zy.http.bean.HttpResultBean
 import com.sunny.zy.http.callback.HttpResult
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import java.lang.reflect.ParameterizedType
-import java.lang.reflect.Type
 
 /**
  * Desc ZyHttp封装层，仅供java使用

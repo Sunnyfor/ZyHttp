@@ -2,8 +2,7 @@ package com.sunny.zy.http
 
 import com.sunny.zy.ZyHttpConfig
 import com.sunny.zy.http.bean.DownLoadResultBean
-import com.sunny.zy.http.interceptor.ZyHttpLogInterceptor
-import com.sunny.zy.http.interceptor.ZyNetworkInterceptor
+import com.sunny.zy.http.interceptor.DefaultNetworkInterceptor
 import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
 
@@ -19,7 +18,7 @@ class OkHttpClientFactory {
         val builder =
             OkHttpClient.Builder()
                 .addInterceptor(ZyHttpConfig.headerInterceptor)
-                .addNetworkInterceptor(ZyHttpLogInterceptor())
+                .addNetworkInterceptor(ZyHttpConfig.logInterceptor)
                 .sslSocketFactory(
                     ZySSLSocketClient.createSSLSocketFactory(),
                     ZySSLSocketClient.getTrustManager()
@@ -30,7 +29,7 @@ class OkHttpClientFactory {
 //                .cookieJar(ZyHttpConfig.zyCookieJar)
                 .retryOnConnectionFailure(true)
 
-        ZyHttpConfig.networkInterceptor?.let {
+        ZyHttpConfig.extendInterceptor?.let {
             builder.addInterceptor(it)
         }
         return builder
@@ -47,6 +46,6 @@ class OkHttpClientFactory {
      * 创建附带下载进度的okHttpClient
      */
     fun createDownloadClient(downLoadResultBean: DownLoadResultBean): OkHttpClient {
-        return getBuild().addNetworkInterceptor(ZyNetworkInterceptor(downLoadResultBean)).build()
+        return getBuild().addNetworkInterceptor(DefaultNetworkInterceptor(downLoadResultBean)).build()
     }
 }

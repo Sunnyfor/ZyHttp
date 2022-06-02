@@ -1,4 +1,4 @@
-package com.sunny.zy.http.base
+package com.sunny.zy.http.mvp
 
 /**
  * Desc 接口 IView基类

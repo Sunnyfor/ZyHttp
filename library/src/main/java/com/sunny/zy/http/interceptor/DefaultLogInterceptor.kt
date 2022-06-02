@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit
  * Mail sunnyfor98@gmail.com
  * Date 2020/9/29
  */
-class ZyHttpLogInterceptor : Interceptor {
+class DefaultLogInterceptor : Interceptor {
 
     @Throws(IOException::class)
     override fun intercept(chain: Interceptor.Chain): Response {

@@ -9,7 +9,7 @@ import okhttp3.Response
  * Mail sunnyfor98@gmail.com
  * Date 2020/08/24
  */
-class ZyHeaderInterceptor : Interceptor {
+class DefaultHeaderInterceptor : Interceptor {
 
     private var headerMap = hashMapOf<String, Any>()
 
