@@ -26,9 +26,11 @@ class OkHttpClientFactory {
                 .hostnameVerifier(ZyHttpConfig.hostnameVerifier)
                 .connectTimeout(ZyHttpConfig.CONNECT_TIME_OUT, TimeUnit.MILLISECONDS) //连接超时时间
                 .readTimeout(ZyHttpConfig.READ_TIME_OUT, TimeUnit.MILLISECONDS) //读取超时时间
-//                .cookieJar(ZyHttpConfig.zyCookieJar)
-                .retryOnConnectionFailure(true)
 
+                .retryOnConnectionFailure(true)
+        ZyHttpConfig.zyCookieJar?.let {
+            builder.cookieJar(it)
+        }
         ZyHttpConfig.extendInterceptor?.let {
             builder.addInterceptor(it)
         }

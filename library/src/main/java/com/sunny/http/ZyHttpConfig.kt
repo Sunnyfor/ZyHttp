@@ -5,6 +5,7 @@ import com.sunny.http.interceptor.DefaultHeaderInterceptor
 import com.sunny.http.interceptor.DefaultLogInterceptor
 import com.sunny.http.parser.DefaultResponseParser
 import com.sunny.http.parser.IResponseParser
+import okhttp3.CookieJar
 import okhttp3.Interceptor
 import java.util.regex.Pattern
 import javax.net.ssl.HostnameVerifier
@@ -136,11 +137,8 @@ object ZyHttpConfig {
 
     /**
      * CookieJar配置
-     * todo：缺少Context
      */
-//    var zyCookieJar: ZyCookieJar = object : ZyCookieJar() {
-//        override fun setCookies(url: HttpUrl, cookies: List<Cookie>): List<Cookie>? = cookies
-//    }
+    var zyCookieJar: CookieJar? = null
 
     /**
      * url验证
