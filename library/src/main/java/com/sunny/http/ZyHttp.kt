@@ -10,7 +10,7 @@ import com.sunny.http.request.ZyRequest
 import com.sunny.http.response.DefaultHttpExecute
 import com.sunny.http.response.IHttpExecute
 import com.sunny.http.utils.HttpLogUtil
-import com.sunny.http.utils.OkHttpClientFactory
+import com.sunny.http.factory.ZyOkHttpClientFactory
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -28,7 +28,7 @@ object ZyHttp {
     //请求创建器
     var zyRequest = ZyRequest()
 
-    var clientFactory = OkHttpClientFactory()
+    var clientFactory = ZyOkHttpClientFactory()
 
     var httpExecute: IHttpExecute = DefaultHttpExecute()
 

@@ -24,13 +24,8 @@ abstract class HttpResultBean<T> : BaseHttpResultBean() {
 
     var bean: T? = null
 
-    fun isSuccess(): Boolean {
-        if (httpIsSuccess()) {
-            if (message.isEmpty() || message == "OK")
-                return true
-        }
-        HttpLogUtil.e(message)
-        return false
+    fun isSuccess(flag:Boolean = true):Boolean{
+        return httpIsSuccess() && flag
     }
 
     override fun toString(): String {
