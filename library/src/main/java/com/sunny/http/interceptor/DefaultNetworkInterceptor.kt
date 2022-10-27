@@ -2,12 +2,10 @@ package com.sunny.http.interceptor
 
 import android.os.Handler
 import android.os.Looper
-import android.util.Base64
 import com.sunny.http.bean.DownLoadResultBean
 import com.sunny.http.body.ProgressResponseBody
 import okhttp3.Interceptor
 import okhttp3.Response
-import org.conscrypt.OpenSSLMessageDigestJDK.MD5
 
 /**
  * Desc 拦截网络请求，获取下载进度
@@ -17,18 +15,11 @@ import org.conscrypt.OpenSSLMessageDigestJDK.MD5
  */
 class DefaultNetworkInterceptor : Interceptor {
 
-    private val downLoadResultMap = HashMap<Long,DownLoadResultBean>()
-
-    val handler = Handler(Looper.getMainLooper()) {
-//        downLoadResultBean?.let {
-//            it.notifyData(it)
-//        }
-        return@Handler false
-    }
+    val handler = Handler(Looper.getMainLooper())
 
     override fun intercept(chain: Interceptor.Chain): Response {
         val originalResponse = chain.proceed(chain.request())
-
+        val downLoadResultBean = originalResponse.request.tag(DownLoadResultBean::class.java)
         val body = ProgressResponseBody(
             originalResponse.body,
             object : ProgressResponseBody.ProgressResponseListener {
@@ -37,25 +28,22 @@ class DefaultNetworkInterceptor : Interceptor {
                     contentLength: Long,
                     done: Boolean
                 ) {
-//                    if (contentLength > 0L) {
-//                        downLoadResultBean?.let {
-//                            it.contentLength = contentLength
-//                            it.readLength = bytesRead
-//                            val progress = (bytesRead * 100L / contentLength).toInt()
-//                            if (progress != it.progress) {
-//                                it.progress = progress
-//                                handler.sendEmptyMessage(0)
-//                            }
-//                        }
-//                    }
+                    if (contentLength > 0L) {
+                        downLoadResultBean?.let {
+                            it.contentLength = contentLength
+                            it.readLength = bytesRead
+                            val progress = (bytesRead * 100L / contentLength).toInt()
+                            if (progress != it.progress) {
+                                it.progress = progress
+                                handler.post {
+                                    it.notifyData(it)
+                                }
+                            }
+                        }
+                    }
                 }
             }
         )
         return originalResponse.newBuilder().body(body).build()
-    }
-
-    fun addDownloadBean(downLoadResultBean: DownLoadResultBean){
-        downLoadResultBean.no = System.currentTimeMillis()
-        downLoadResultMap[downLoadResultBean.no] = downLoadResultBean
     }
 }

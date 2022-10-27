@@ -3,6 +3,7 @@ package com.sunny.http.parser
 import com.google.gson.Gson
 import com.sunny.http.bean.DownLoadResultBean
 import com.sunny.http.bean.HttpResultBean
+import com.sunny.kit.ZyKit
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
@@ -55,10 +56,9 @@ open class DefaultResponseParser : IResponseParser {
         downLoadResultBean: DownLoadResultBean
     ): File {
 
-//        if (downLoadResultBean.filePath == null) {
-//            todo 地址怎么获取
-//            downLoadResultBean.filePath = ZyHttpConfig.TEMP
-//        }
+        if (downLoadResultBean.filePath == null) {
+            downLoadResultBean.filePath = ZyKit.getCatchPath()
+        }
 
         val pathFile = File(downLoadResultBean.filePath ?: "")
         if (!pathFile.exists()) {

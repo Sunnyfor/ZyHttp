@@ -1,6 +1,5 @@
 package com.sunny.http.bean
 
-import com.sunny.http.utils.HttpLogUtil
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 

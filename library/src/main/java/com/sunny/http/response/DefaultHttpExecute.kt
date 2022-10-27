@@ -15,7 +15,7 @@ import okhttp3.Request
 open class DefaultHttpExecute : IHttpExecute {
 
     override fun executeDownload(request: Request, resultBean: DownLoadResultBean) {
-        resultBean.call = ZyHttp.clientFactory.createDownloadClient(resultBean).newCall(request)
+        resultBean.call = ZyHttp.clientFactory.getDownloadClient(resultBean).newCall(request)
         resultBean.call?.execute()?.let { response ->
             //获取HTTP状态码
             resultBean.httpCode = response.code

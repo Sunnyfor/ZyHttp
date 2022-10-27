@@ -34,7 +34,7 @@ class ZyOkHttpClientFactory : IOkHttpClientFactory {
      */
     override fun getOkHttpClient(): OkHttpClient {
         init()
-        return basicOkHttpClient!!
+        return basicOkHttpClient as OkHttpClient
     }
 
     /**
@@ -42,8 +42,7 @@ class ZyOkHttpClientFactory : IOkHttpClientFactory {
      */
     override fun getDownloadClient(downLoadResultBean: DownLoadResultBean): OkHttpClient {
         init()
-        networkInterceptor.addDownloadBean(downLoadResultBean)
-        return basicOkHttpClient!!
+        return basicOkHttpClient as OkHttpClient
     }
 
 
