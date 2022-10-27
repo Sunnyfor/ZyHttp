@@ -6,11 +6,11 @@ import com.sunny.http.bean.BaseHttpResultBean
 import com.sunny.http.bean.DownLoadResultBean
 import com.sunny.http.bean.HttpResultBean
 import com.sunny.http.bean.WebSocketResultBean
+import com.sunny.http.factory.ZyOkHttpClientFactory
 import com.sunny.http.request.ZyRequest
 import com.sunny.http.response.DefaultHttpExecute
 import com.sunny.http.response.IHttpExecute
-import com.sunny.http.utils.HttpLogUtil
-import com.sunny.http.utils.OkHttpClientFactory
+import com.sunny.kit.utils.LogUtil
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -28,7 +28,7 @@ object ZyHttp {
     //请求创建器
     var zyRequest = ZyRequest()
 
-    var clientFactory = OkHttpClientFactory()
+    var clientFactory = ZyOkHttpClientFactory()
 
     var httpExecute: IHttpExecute = DefaultHttpExecute()
 
@@ -199,7 +199,8 @@ object ZyHttp {
             httpResultBean.url = request.url.toString()
             //执行异步网络请求
             if (httpResultBean is DownLoadResultBean) {
-                httpExecute.executeDownload(request, httpResultBean)
+                val newRequest = request.newBuilder().tag(DownLoadResultBean::class.java, httpResultBean).build()
+                httpExecute.executeDownload(newRequest, httpResultBean)
             } else if (httpResultBean is HttpResultBean<*>) {
                 httpExecute.executeHttp(request, httpResultBean)
             }
@@ -207,7 +208,7 @@ object ZyHttp {
             //出现异常获取异常信息
             httpResultBean.exception = e
             httpResultBean.message = e.message ?: ""
-            HttpLogUtil.e("发生异常->:$httpResultBean")
+            LogUtil.e("发生异常->:$httpResultBean")
         }
 
         withContext(Dispatchers.Main) {

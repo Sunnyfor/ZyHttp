@@ -10,7 +10,7 @@ import java.io.File
  */
 abstract class DownLoadResultBean(var fileName: String? = null, var filePath: String? = null) :
     BaseHttpResultBean() {
-
+    var no = 0L
     var contentLength = 0L //数据长度
     var readLength = 0L  //当前读取长度
     var done = false //是否完成

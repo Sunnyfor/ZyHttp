@@ -1,7 +1,7 @@
 package com.sunny.http.interceptor
 
-import com.sunny.http.utils.HttpLogUtil
 import com.sunny.http.utils.isProbablyUtf8
+import com.sunny.kit.utils.LogUtil
 import okhttp3.Headers
 import okhttp3.Interceptor
 import okhttp3.Response
@@ -43,7 +43,7 @@ class DefaultLogInterceptor : Interceptor {
             startLogSb.append("\n")
             startLogSb.append("Params: $params")
         }
-        HttpLogUtil.w("发起请求", startLogSb.toString(),false)
+        LogUtil.w("发起请求", startLogSb.toString(),false)
 
         val endLogSb = StringBuilder()
         val startNs = System.nanoTime()
@@ -52,7 +52,7 @@ class DefaultLogInterceptor : Interceptor {
             response = chain.proceed(request)
         } catch (e: Exception) {
             endLogSb.append(e.message)
-            HttpLogUtil.w("请求结束", endLogSb.toString(),false)
+            LogUtil.w("请求结束", endLogSb.toString(),false)
             throw e
         }
 
@@ -92,7 +92,7 @@ class DefaultLogInterceptor : Interceptor {
                 }
             }
         }
-        HttpLogUtil.w("请求结束", endLogSb.toString(),false)
+        LogUtil.w("请求结束", endLogSb.toString(),false)
         return response
     }
 

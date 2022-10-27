@@ -5,6 +5,7 @@ import com.sunny.http.interceptor.DefaultHeaderInterceptor
 import com.sunny.http.interceptor.DefaultLogInterceptor
 import com.sunny.http.parser.DefaultResponseParser
 import com.sunny.http.parser.IResponseParser
+import com.sunny.http.utils.ZyCookieJar
 import okhttp3.CookieJar
 import okhttp3.Interceptor
 import java.util.regex.Pattern
@@ -138,7 +139,7 @@ object ZyHttpConfig {
     /**
      * CookieJar配置
      */
-    var zyCookieJar: CookieJar? = null
+    var zyCookieJar: CookieJar = ZyCookieJar()
 
     /**
      * url验证
@@ -159,6 +160,6 @@ object ZyHttpConfig {
     /**
      * 设置Log标签名
      */
-    var logTag  = "ZYLog"
+    var logTag = "ZYLog"
 
 }

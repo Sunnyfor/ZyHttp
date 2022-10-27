@@ -37,7 +37,7 @@ class ZyHttpJava(val scope: CoroutineScope) {
         }
     }
 
-    fun <T> postJosn(
+    fun <T> postJson(
         scope: CoroutineScope,
         url: String,
         params: String? = null,

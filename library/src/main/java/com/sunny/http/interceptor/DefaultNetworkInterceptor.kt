@@ -1,9 +1,9 @@
 package com.sunny.http.interceptor
 
+import android.os.Handler
+import android.os.Looper
 import com.sunny.http.bean.DownLoadResultBean
 import com.sunny.http.body.ProgressResponseBody
-import kotlinx.coroutines.Dispatchers.Main
-import kotlinx.coroutines.launch
 import okhttp3.Interceptor
 import okhttp3.Response
 
@@ -13,11 +13,13 @@ import okhttp3.Response
  * Mail sunnyfor98@gmail.com
  * Date 2020/8/24
  */
-class DefaultNetworkInterceptor(var downLoadResultBean: DownLoadResultBean) : Interceptor {
+class DefaultNetworkInterceptor : Interceptor {
+
+    val handler = Handler(Looper.getMainLooper())
 
     override fun intercept(chain: Interceptor.Chain): Response {
         val originalResponse = chain.proceed(chain.request())
-
+        val downLoadResultBean = originalResponse.request.tag(DownLoadResultBean::class.java)
         val body = ProgressResponseBody(
             originalResponse.body,
             object : ProgressResponseBody.ProgressResponseListener {
@@ -27,12 +29,16 @@ class DefaultNetworkInterceptor(var downLoadResultBean: DownLoadResultBean) : In
                     done: Boolean
                 ) {
                     if (contentLength > 0L) {
-                        downLoadResultBean.contentLength = contentLength
-                        downLoadResultBean.readLength = bytesRead
-                        val progress = (bytesRead * 100L / contentLength).toInt() / 2
-                        downLoadResultBean.progress = progress
-                        downLoadResultBean.scope?.launch(Main) {
-                            downLoadResultBean.notifyData(downLoadResultBean)
+                        downLoadResultBean?.let {
+                            it.contentLength = contentLength
+                            it.readLength = bytesRead
+                            val progress = (bytesRead * 100L / contentLength).toInt()
+                            if (progress != it.progress) {
+                                it.progress = progress
+                                handler.post {
+                                    it.notifyData(it)
+                                }
+                            }
                         }
                     }
                 }

@@ -1,8 +1,10 @@
 package com.sunny.http.request
 
 import android.net.Uri
+import androidx.documentfile.provider.DocumentFile
 import com.sunny.http.ZyHttp
 import com.sunny.http.ZyHttpConfig
+import com.sunny.kit.ZyKit
 import okhttp3.FormBody
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
@@ -191,17 +193,16 @@ class ZyRequest {
             }
 
             is Uri -> {
-                //todo 上下文
-//                if (fileName == null) {
-//                    fileName = DocumentFile.fromSingleUri(ZyFrameStore.getContext(), path)?.name
-//                }
-//                ZyFrameStore.getContext().contentResolver.openInputStream(path)?.use { stream ->
-//                    body.addFormDataPart(
-//                        "file",
-//                        fileName,
-//                        stream.readBytes().toRequestBody("multipart/form-data".toMediaType())
-//                    )
-//                }
+                if (fileName == null) {
+                    fileName = DocumentFile.fromSingleUri(ZyKit.getContext(), path)?.name
+                }
+                ZyKit.getContext().contentResolver.openInputStream(path)?.use { stream ->
+                    body.addFormDataPart(
+                        "file",
+                        fileName,
+                        stream.readBytes().toRequestBody("multipart/form-data".toMediaType())
+                    )
+                }
             }
         }
 
