@@ -63,11 +63,11 @@ class ZyOkHttpClientFactory : IOkHttpClientFactory {
                 .hostnameVerifier(ZyHttpConfig.hostnameVerifier)
                 .connectTimeout(ZyHttpConfig.CONNECT_TIME_OUT, TimeUnit.MILLISECONDS) //连接超时时间
                 .readTimeout(ZyHttpConfig.READ_TIME_OUT, TimeUnit.MILLISECONDS) //读取超时时间
-
+                .callTimeout(ZyHttpConfig.CALL_TIME_OUT, TimeUnit.MILLISECONDS)
+                .writeTimeout(ZyHttpConfig.WRITE_TIME_OUT,TimeUnit.MILLISECONDS)
                 .retryOnConnectionFailure(true)
-        ZyHttpConfig.zyCookieJar?.let {
-            builder.cookieJar(it)
-        }
+                .cookieJar(ZyHttpConfig.zyCookieJar)
+
         ZyHttpConfig.extendInterceptor?.let {
             builder.addInterceptor(it)
         }

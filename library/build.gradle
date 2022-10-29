@@ -4,12 +4,14 @@ plugins {
     id 'maven-publish'
 }
 
+apply from: 'https://gitee.com/sunnyfor/GradleConfig/raw/master/config.gradle'
+
 android {
-    compileSdk 32
+    compileSdk project.ext.android.compileSdkVersion
 
     defaultConfig {
-        minSdk 21
-        targetSdk 32
+        minSdk project.ext.android.minSdkVersion
+        targetSdk project.ext.android.targetSdkVersion
         versionCode 1
         versionName version
 
@@ -33,18 +35,13 @@ android {
 
 dependencies {
     //okHttp
-    api 'org.conscrypt:conscrypt-android:2.4.0'
-    api 'com.squareup.okhttp3:okhttp:4.10.0'
-
-    //google的JSON解析库
-    api 'com.google.code.gson:gson:2.9.1'
-
+    api project.ext.dependencies.okhttp
     //Kotlin协程库
-    api 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4'
+    api project.ext.dependencies.coroutines
 
+    implementation project.ext.dependencies.conscrypt
     implementation 'androidx.documentfile:documentfile:1.0.1'
-
-    implementation 'com.github.Sunnyfor:ZyKit:1.0.0'
+    implementation 'com.github.Sunnyfor:ZyKit:1.0.1'
 }
 
 

@@ -6,6 +6,7 @@ import com.sunny.http.bean.BaseHttpResultBean
 import com.sunny.http.bean.DownLoadResultBean
 import com.sunny.http.bean.HttpResultBean
 import com.sunny.http.bean.WebSocketResultBean
+import com.sunny.http.factory.IOkHttpClientFactory
 import com.sunny.http.factory.ZyOkHttpClientFactory
 import com.sunny.http.request.ZyRequest
 import com.sunny.http.response.DefaultHttpExecute
@@ -28,13 +29,9 @@ object ZyHttp {
     //请求创建器
     var zyRequest = ZyRequest()
 
-    var clientFactory = ZyOkHttpClientFactory()
+    var clientFactory: IOkHttpClientFactory = ZyOkHttpClientFactory()
 
     var httpExecute: IHttpExecute = DefaultHttpExecute()
-
-    var FilePath = "path"
-
-    var FileName = "fileName"
 
     /**
      * get请求
@@ -167,6 +164,9 @@ object ZyHttp {
         }
     }
 
+    fun <T> getList(vararg file: T): List<T> {
+        return file.toList()
+    }
 
     fun webSocket(
         url: String,

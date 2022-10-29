@@ -16,6 +16,7 @@ class DefaultHeaderInterceptor : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         val originalRequest = chain.request()
         val authorised = originalRequest.newBuilder()
+        //全局头信息
         headerMap.forEach {
             authorised.header(it.key, it.value.toString())
         }
@@ -25,7 +26,7 @@ class DefaultHeaderInterceptor : Interceptor {
     /**
      * 设置网络请求头信息
      */
-    fun setHttpHeader(headerMap: HashMap<String, Any>) {
+    fun setHttpHeader(headerMap: HashMap<String, *>) {
         this.headerMap.clear()
         this.headerMap.putAll(headerMap)
     }

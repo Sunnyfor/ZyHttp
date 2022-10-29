@@ -163,58 +163,47 @@ class ZyRequest {
      */
     fun formUploadRequest(url: String, params: Map<String, Any>): Request {
         val urlSb = getUrlSb(url)
-        val path = params[ZyHttp.FilePath]
-        var fileName: String? = params[ZyHttp.FileName]?.toString()
-
         val body = MultipartBody.Builder()
         body.setType(MultipartBody.FORM)
+        val contentType = "multipart/form-data".toMediaType()
+        params.entries.forEach { entry ->
+            val data = entry.value
+            if (data is List<*>) {
+                data.forEach { value ->
+                    when (value) {
+                        is String -> {
+                            val file = File(value)
+                            body.addFormDataPart(
+                                entry.key,
+                                file.name,
+                                file.asRequestBody(contentType)
+                            )
+                        }
 
-        when (path) {
-            is String -> {
-                if (fileName == null) {
-                    fileName = path.split("/").last()
+                        is File -> {
+                            body.addFormDataPart(
+                                entry.key,
+                                value.name,
+                                value.asRequestBody(contentType)
+                            )
+                        }
+                        is Uri -> {
+                            val fileName = DocumentFile.fromSingleUri(ZyKit.getContext(), value)?.name
+                            ZyKit.getContext().contentResolver.openInputStream(value)?.use { stream ->
+                                body.addFormDataPart(
+                                    entry.key,
+                                    fileName,
+                                    stream.readBytes().toRequestBody(contentType)
+                                )
+                            }
+                        }
+                    }
                 }
-                body.addFormDataPart(
-                    "file",
-                    fileName,
-                    File(path).asRequestBody("multipart/form-data".toMediaType())
-                )
-            }
-
-            is File -> {
-                if (fileName == null) {
-                    fileName = path.name
-                }
-                body.addFormDataPart(
-                    "file",
-                    fileName,
-                    path.asRequestBody("multipart/form-data".toMediaType())
-                )
-            }
-
-            is Uri -> {
-                if (fileName == null) {
-                    fileName = DocumentFile.fromSingleUri(ZyKit.getContext(), path)?.name
-                }
-                ZyKit.getContext().contentResolver.openInputStream(path)?.use { stream ->
-                    body.addFormDataPart(
-                        "file",
-                        fileName,
-                        stream.readBytes().toRequestBody("multipart/form-data".toMediaType())
-                    )
-                }
-            }
-        }
-
-        params.entries.forEach {
-            if (it.key != ZyHttp.FilePath && it.key != ZyHttp.FileName) {
-                body.addFormDataPart(
-                    it.key,
-                    null,
-                    it.value.toString().toRequestBody("text/plain".toMediaType())
-                )
+            } else {
+                body.addFormDataPart(entry.key, data.toString())
             }
         }
+
         return Request.Builder().url(urlSb.toString()).post(body.build())
             .tag(paramsToString(params)).build()
     }

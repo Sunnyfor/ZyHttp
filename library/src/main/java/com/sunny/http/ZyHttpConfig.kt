@@ -6,7 +6,6 @@ import com.sunny.http.interceptor.DefaultLogInterceptor
 import com.sunny.http.parser.DefaultResponseParser
 import com.sunny.http.parser.IResponseParser
 import com.sunny.http.utils.ZyCookieJar
-import okhttp3.CookieJar
 import okhttp3.Interceptor
 import java.util.regex.Pattern
 import javax.net.ssl.HostnameVerifier
@@ -107,6 +106,18 @@ object ZyHttpConfig {
      */
     var READ_TIME_OUT = 10 * 1000L
 
+
+    /**
+     * 写入超时时间，单位毫秒
+     */
+    var WRITE_TIME_OUT = 10 * 1000L
+
+
+    /**
+     * 设置完成调用的默认超时时间。值为0表示没有超时，否则值必须在1和Integer之间。
+     */
+    var CALL_TIME_OUT = 0L
+
     val headerInterceptor: DefaultHeaderInterceptor by lazy {
         DefaultHeaderInterceptor()
     }
@@ -126,7 +137,7 @@ object ZyHttpConfig {
     /**
      * 设置头信息
      */
-    fun setHttpHeader(headerMap: HashMap<String, Any>) {
+    fun setHttpHeader(headerMap: HashMap<String, *>) {
         headerInterceptor.setHttpHeader(headerMap)
     }
 
@@ -139,7 +150,7 @@ object ZyHttpConfig {
     /**
      * CookieJar配置
      */
-    var zyCookieJar: CookieJar = ZyCookieJar()
+    var zyCookieJar = ZyCookieJar()
 
     /**
      * url验证
