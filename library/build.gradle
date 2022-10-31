@@ -41,7 +41,7 @@ dependencies {
 
     implementation project.ext.dependencies.conscrypt
     implementation 'androidx.documentfile:documentfile:1.0.1'
-    implementation 'com.github.Sunnyfor:ZyKit:1.0.1'
+    implementation 'com.github.Sunnyfor:ZyKit:1.0.2'
 }
 
 
@@ -52,8 +52,8 @@ afterEvaluate {
             release(MavenPublication) {
                 from components.release
                 groupId = 'com.github.Sunnyfor'
-                artifactId = 'zyhttp'
-                version = '1.0.1'
+                artifactId = 'Zyhttp'
+                version = '1.0.2'
             }
         }
     }
