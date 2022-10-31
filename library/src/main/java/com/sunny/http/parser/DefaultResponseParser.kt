@@ -4,6 +4,7 @@ import com.google.gson.Gson
 import com.sunny.http.bean.DownLoadResultBean
 import com.sunny.http.bean.HttpResultBean
 import com.sunny.kit.ZyKit
+import com.sunny.kit.utils.FileUtil
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
@@ -57,7 +58,7 @@ open class DefaultResponseParser : IResponseParser {
     ): File {
 
         if (downLoadResultBean.filePath == null) {
-            downLoadResultBean.filePath = ZyKit.getCatchPath()
+            downLoadResultBean.filePath = FileUtil.getCacheDir()
         }
 
         val pathFile = File(downLoadResultBean.filePath ?: "")
