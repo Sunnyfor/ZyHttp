@@ -1,10 +1,12 @@
 package com.sunny.http.response
 
+import android.webkit.MimeTypeMap
 import com.sunny.http.ZyHttp
 import com.sunny.http.ZyHttpConfig
 import com.sunny.http.bean.DownLoadResultBean
 import com.sunny.http.bean.HttpResultBean
 import okhttp3.Request
+
 
 /**
  * Desc 默认的Http执行器，可重写
@@ -25,6 +27,12 @@ open class DefaultHttpExecute : IHttpExecute {
             resultBean.url = request.url.toString()
             if (response.isSuccessful) {
                 response.body?.let {
+                    val contentType = response.headers["content-type"]
+                    if (!contentType.isNullOrEmpty()) {
+                        val mimeType = contentType.split(";")[0].trim()
+                        val extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType)
+                        resultBean.extension = extension ?: ""
+                    }
                     resultBean.file = ZyHttpConfig.iResponseParser.parserDownloadResponse(it, resultBean)
                 }
             }

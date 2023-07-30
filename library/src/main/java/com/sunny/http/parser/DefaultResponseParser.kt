@@ -3,7 +3,6 @@ package com.sunny.http.parser
 import com.google.gson.Gson
 import com.sunny.http.bean.DownLoadResultBean
 import com.sunny.http.bean.HttpResultBean
-import com.sunny.kit.ZyKit
 import com.sunny.kit.utils.FileUtil
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
@@ -67,10 +66,10 @@ open class DefaultResponseParser : IResponseParser {
         }
 
         if (downLoadResultBean.fileName == null || downLoadResultBean.fileName?.isEmpty() == true) {
-            downLoadResultBean.fileName = "${System.currentTimeMillis()}.temp"
+            downLoadResultBean.fileName = "${System.currentTimeMillis()}"
         }
 
-        val file = File(pathFile, downLoadResultBean.fileName ?: "")
+        val file = File(pathFile, downLoadResultBean.fileName + "." + downLoadResultBean.extension)
         if (file.exists()) {
             file.delete()
         }
