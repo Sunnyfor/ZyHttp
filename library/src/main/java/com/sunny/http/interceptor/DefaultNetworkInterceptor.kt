@@ -1,9 +1,8 @@
 package com.sunny.http.interceptor
 
-import android.os.Handler
-import android.os.Looper
 import com.sunny.http.bean.DownLoadResultBean
 import com.sunny.http.body.ProgressResponseBody
+import kotlinx.coroutines.launch
 import okhttp3.Interceptor
 import okhttp3.Response
 
@@ -14,36 +13,25 @@ import okhttp3.Response
  * Date 2020/8/24
  */
 class DefaultNetworkInterceptor : Interceptor {
-
-    val handler = Handler(Looper.getMainLooper())
-
     override fun intercept(chain: Interceptor.Chain): Response {
         val originalResponse = chain.proceed(chain.request())
         val downLoadResultBean = originalResponse.request.tag(DownLoadResultBean::class.java)
-        val body = ProgressResponseBody(
-            originalResponse.body,
-            object : ProgressResponseBody.ProgressResponseListener {
-                override fun onResponseProgress(
-                    bytesRead: Long,
-                    contentLength: Long,
-                    done: Boolean
-                ) {
+        val progressResponseListener = object : ProgressResponseBody.ProgressResponseListener {
+            override fun onResponseProgress(bytesRead: Long, contentLength: Long, done: Boolean) {
+                downLoadResultBean?.let {
+                    it.contentLength = contentLength
+                    it.readLength = bytesRead
                     if (contentLength > 0L) {
-                        downLoadResultBean?.let {
-                            it.contentLength = contentLength
-                            it.readLength = bytesRead
-                            val progress = (bytesRead * 100L / contentLength).toInt()
-                            if (progress != it.progress) {
-                                it.progress = progress
-                                handler.post {
-                                    it.notifyData(it)
-                                }
-                            }
-                        }
+                        val progress = (bytesRead * 100L / contentLength).toInt()
+                        it.progress = progress
+                    }
+                    downLoadResultBean.scope?.launch {
+                        it.notifyData(it)
                     }
                 }
             }
-        )
+        }
+        val body = ProgressResponseBody(originalResponse.body, progressResponseListener)
         return originalResponse.newBuilder().body(body).build()
     }
 }

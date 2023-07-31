@@ -77,10 +77,9 @@ open class DefaultResponseParser : IResponseParser {
 
         val byte = ByteArray(4096)
         val outputStream = FileOutputStream(file)
-
         var totalRead = 0L
-
         downLoadResultBean.scope?.launch(IO) {
+            //写入文件
             while (true) {
                 val read = data.read(byte)
                 if (read == -1) {
@@ -88,18 +87,10 @@ open class DefaultResponseParser : IResponseParser {
                 }
                 totalRead += read
                 outputStream.write(byte, 0, read)
-
-                if (downLoadResultBean.contentLength != 0L) {
-                    val progress =
-                        50 + (totalRead * 100 / downLoadResultBean.contentLength).toInt() / 2
-                    if (progress != downLoadResultBean.progress) {
-                        withContext(Main) {
-                            downLoadResultBean.progress = progress
-                            downLoadResultBean.done = totalRead == downLoadResultBean.contentLength
-                            downLoadResultBean.notifyData(downLoadResultBean)
-                        }
-                    }
-                }
+            }
+            withContext(Main) {
+                downLoadResultBean.done = totalRead == downLoadResultBean.readLength
+                downLoadResultBean.notifyData(downLoadResultBean)
             }
         }
         outputStream.flush()
