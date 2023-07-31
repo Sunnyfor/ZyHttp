@@ -5,9 +5,7 @@ import com.sunny.http.bean.DownLoadResultBean
 import com.sunny.http.bean.HttpResultBean
 import com.sunny.kit.utils.FileUtil
 import kotlinx.coroutines.Dispatchers.IO
-import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import okhttp3.ResponseBody
 import java.io.File
 import java.io.FileOutputStream
@@ -88,10 +86,7 @@ open class DefaultResponseParser : IResponseParser {
                 totalRead += read
                 outputStream.write(byte, 0, read)
             }
-            withContext(Main) {
-                downLoadResultBean.done = totalRead == downLoadResultBean.readLength
-                downLoadResultBean.notifyData(downLoadResultBean)
-            }
+            downLoadResultBean.done = totalRead == downLoadResultBean.readLength
         }
         outputStream.flush()
         return file
