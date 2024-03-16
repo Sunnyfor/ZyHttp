@@ -2,6 +2,7 @@ package com.sunny.http.interceptor
 
 import com.sunny.http.bean.DownLoadResultBean
 import com.sunny.http.body.ProgressResponseBody
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import okhttp3.Interceptor
 import okhttp3.Response
@@ -25,7 +26,7 @@ class DefaultNetworkInterceptor : Interceptor {
                         val progress = (bytesRead * 100L / contentLength).toInt()
                         it.progress = progress
                     }
-                    downLoadResultBean.scope?.launch {
+                    downLoadResultBean.scope?.launch(Dispatchers.Main) {
                         it.notifyData(it)
                     }
                 }

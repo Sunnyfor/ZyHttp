@@ -63,11 +63,16 @@ open class DefaultResponseParser : IResponseParser {
             pathFile.mkdirs()
         }
 
-        if (downLoadResultBean.fileName == null || downLoadResultBean.fileName?.isEmpty() == true) {
-            downLoadResultBean.fileName = "${System.currentTimeMillis()}"
+        var fileName = downLoadResultBean.fileName ?: ""
+        if (fileName.isEmpty()) {
+            fileName = "${System.currentTimeMillis()}.${downLoadResultBean.extension}"
+        } else {
+            if (!fileName.contains(".")) {
+                fileName += ".${downLoadResultBean.extension}"
+            }
         }
-
-        val file = File(pathFile, downLoadResultBean.fileName + "." + downLoadResultBean.extension)
+        downLoadResultBean.fileName = fileName
+        val file = File(pathFile, fileName)
         if (file.exists()) {
             file.delete()
         }

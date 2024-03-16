@@ -79,12 +79,11 @@ class DefaultLogInterceptor : Interceptor {
                         buffer.writeAll(gzippedResponseBody)
                     }
                 }
-                val contentType = responseBody.contentType()
-                val charset: Charset? = contentType?.charset(StandardCharsets.UTF_8)
+
                 if (buffer.isProbablyUtf8() && contentLength != 0L) {
-                    charset?.let {
-                        val result = buffer.clone().readString(it)
-                        if (result.isNotEmpty()) {
+                    responseBody.contentType()?.let { mediaType ->
+                        if (mediaType.type == "text" || mediaType.subtype == "json" || mediaType.subtype == "xml") {
+                            val result = buffer.clone().readString(StandardCharsets.UTF_8)
                             endLogSb.append("\n")
                             endLogSb.append(result.trim())
                         }
