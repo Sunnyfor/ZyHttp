@@ -71,22 +71,21 @@ class DefaultLogInterceptor : Interceptor {
 
         if (response.promisesBody()) {
             responseBody?.source()?.let {
-                it.request(Long.MAX_VALUE) // Buffer the entire body.
-                var buffer = it.buffer
-                if ("gzip".equals(response.headers["Content-Encoding"], ignoreCase = true)) {
-                    GzipSource(buffer.clone()).use { gzippedResponseBody ->
-                        buffer = Buffer()
-                        buffer.writeAll(gzippedResponseBody)
-                    }
-                }
-
-                if (buffer.isProbablyUtf8() && contentLength != 0L) {
-                    responseBody.contentType()?.let { mediaType ->
-                        if (mediaType.type == "text" || mediaType.subtype == "json" || mediaType.subtype == "xml") {
-                            val result = buffer.clone().readString(StandardCharsets.UTF_8)
-                            endLogSb.append("\n")
-                            endLogSb.append(result.trim())
+                responseBody.contentType()?.let { mediaType ->
+                    if (mediaType.type == "text" || mediaType.subtype == "json" || mediaType.subtype == "xml") {
+                        it.request(Long.MAX_VALUE)
+                        val buffer = if ("gzip".equals(response.headers["Content-Encoding"], ignoreCase = true)) {
+                            // 如果是gzip压缩的，进行解压
+                            val gzipSource = GzipSource(it.buffer.clone())
+                            Buffer().apply {
+                                writeAll(gzipSource)
+                            }
+                        } else {
+                            it.buffer.clone()
                         }
+                        val result = buffer.readString(StandardCharsets.UTF_8)
+                        endLogSb.append("\n")
+                        endLogSb.append(result)
                     }
                 }
             }
