@@ -61,10 +61,10 @@ class DefaultLogInterceptor : Interceptor {
             responseBody?.source()?.let {
 
                 it.request(Long.MAX_VALUE)
-                var buffer = it.buffer
+                var buffer = it.buffer.clone()
                 if ("gzip".equals(response.headers["Content-Encoding"], ignoreCase = true)) {
                     // 如果是gzip压缩的，进行解压
-                    GzipSource(it.buffer.clone()).use {
+                    GzipSource(buffer).use {
                         buffer = Buffer()
                         buffer.writeAll(it)
                     }
