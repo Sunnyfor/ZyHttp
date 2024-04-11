@@ -41,7 +41,8 @@ dependencies {
 
     implementation project.ext.dependencies.conscrypt
     implementation 'androidx.documentfile:documentfile:1.0.1'
-    implementation 'com.github.Sunnyfor:ZyKit:1.0.2'
+    implementation 'com.github.Sunnyfor:ZyKit:2.0.1'
+//    implementation(project(':ZyKit'))
 }
 
 

@@ -15,6 +15,6 @@ interface IResponseParser {
 
     fun <T> parserHttpResponse(responseBody: ResponseBody, httpResultBean: HttpResultBean<T>): T
 
-    fun parserDownloadResponse(responseBody: ResponseBody, downLoadResultBean: DownLoadResultBean): File
+    fun parserDownloadResponse(responseBody: ResponseBody, downLoadResultBean: DownLoadResultBean)
 
 }

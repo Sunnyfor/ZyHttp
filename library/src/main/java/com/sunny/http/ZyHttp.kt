@@ -11,7 +11,7 @@ import com.sunny.http.factory.ZyOkHttpClientFactory
 import com.sunny.http.request.ZyRequest
 import com.sunny.http.response.DefaultHttpExecute
 import com.sunny.http.response.IHttpExecute
-import com.sunny.kit.utils.LogUtil
+import com.sunny.kit.utils.application.ZyKit
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -208,7 +208,8 @@ object ZyHttp {
             //出现异常获取异常信息
             httpResultBean.exception = e
             httpResultBean.message = e.message ?: ""
-            LogUtil.e("发生异常->:$httpResultBean")
+            e.printStackTrace()
+            ZyKit.log.e("发生异常->:$httpResultBean")
         }
 
         withContext(Dispatchers.Main) {

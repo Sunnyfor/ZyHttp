@@ -16,9 +16,9 @@ interface IOkHttpClientFactory {
     fun getOkHttpClient(): OkHttpClient
 
     /**
-     * 创建附带下载进度的okHttpClient
+     * 获取OkHttpClient.Builder对象
      */
-    fun getDownloadClient(downLoadResultBean: DownLoadResultBean): OkHttpClient
+    fun getBuild(): OkHttpClient.Builder
 
     /**
      * 清空OkHttpClient

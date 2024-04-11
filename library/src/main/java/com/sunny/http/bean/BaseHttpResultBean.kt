@@ -21,6 +21,6 @@ abstract class BaseHttpResultBean {
     }
 
     override fun toString(): String {
-        return "BaseHttpResultBean(url='$url', resUrl='$resUrl', httpCode=$httpCode, message='$message', exception=$exception)"
+        return "url='$url', resUrl='$resUrl', httpCode=$httpCode, message='$message', exception=$exception"
     }
 }

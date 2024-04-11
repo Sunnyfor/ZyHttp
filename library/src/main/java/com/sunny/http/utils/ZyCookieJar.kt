@@ -1,7 +1,6 @@
 package com.sunny.http.utils
 
-import com.google.gson.reflect.TypeToken
-import com.sunny.kit.utils.SpUtil
+import com.sunny.kit.utils.application.ZyKit
 import okhttp3.Cookie
 import okhttp3.CookieJar
 import okhttp3.HttpUrl
@@ -20,13 +19,13 @@ class ZyCookieJar : CookieJar {
 
     override fun saveFromResponse(url: HttpUrl, cookies: List<Cookie>) {
         cookieStore[url.host] = cookies
-        SpUtil.get(fileName).setObject(url.host, cookies)
+        ZyKit.sp(fileName).set(url.host, cookies)
     }
 
     override fun loadForRequest(url: HttpUrl): List<Cookie> {
         var list = cookieStore[url.host]
         if (list == null) {
-            list = SpUtil.get(fileName).getObject(url.host, object : TypeToken<List<Cookie>>() {}.type)
+            list = ZyKit.sp(fileName).getList<Cookie>(url.host)
                 ?: arrayListOf()
         }
         cookieStore[url.host] = list
@@ -38,6 +37,6 @@ class ZyCookieJar : CookieJar {
      */
     fun clearCookie() {
         cookieStore.clear()
-        SpUtil.get(fileName).clear()
+        ZyKit.sp(fileName).clear()
     }
 }

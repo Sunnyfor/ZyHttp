@@ -2,9 +2,8 @@ package com.sunny.http.request
 
 import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
-import com.sunny.http.ZyHttp
 import com.sunny.http.ZyHttpConfig
-import com.sunny.kit.ZyKit
+import com.sunny.kit.utils.application.ZyKit
 import okhttp3.FormBody
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
@@ -124,7 +123,7 @@ class ZyRequest {
     }
 
     /**
-     * PATCH-Jsonm请求生成
+     * PATCH-Json请求生成
      */
     fun patchJsonRequest(url: String, json: String): Request {
         val urlSb = getUrlSb(url)

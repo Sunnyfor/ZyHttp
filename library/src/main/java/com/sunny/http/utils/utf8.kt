@@ -4,7 +4,7 @@ import okio.Buffer
 import java.io.EOFException
 
 /**
- * Desc 检测内容是否为未UTF-8格式
+ * Desc 检测内容是否为UTF-8格式
  * Author ZY
  * Mail sunnyfor98@gmail.com
  * Date 2020/9/29

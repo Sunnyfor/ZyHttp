@@ -6,6 +6,7 @@ import com.sunny.http.ZyHttpConfig
 import com.sunny.http.bean.DownLoadResultBean
 import com.sunny.http.bean.HttpResultBean
 import okhttp3.Request
+import java.net.URLDecoder
 
 
 /**
@@ -17,7 +18,7 @@ import okhttp3.Request
 open class DefaultHttpExecute : IHttpExecute {
 
     override fun executeDownload(request: Request, resultBean: DownLoadResultBean) {
-        resultBean.call = ZyHttp.clientFactory.getDownloadClient(resultBean).newCall(request)
+        resultBean.call = ZyHttp.clientFactory.getOkHttpClient().newCall(request)
         resultBean.call?.execute()?.let { response ->
             //获取HTTP状态码
             resultBean.httpCode = response.code
@@ -26,14 +27,27 @@ open class DefaultHttpExecute : IHttpExecute {
             //获取请求URL
             resultBean.url = request.url.toString()
             if (response.isSuccessful) {
-                response.body?.let {
-                    val contentType = response.headers["content-type"]
-                    if (!contentType.isNullOrEmpty()) {
-                        val mimeType = contentType.split(";")[0].trim()
-                        val extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType)
-                        resultBean.extension = extension ?: ""
+                response.body?.let { body ->
+                    response.header("Content-Disposition")?.let {
+                        // 查找filename参数并解码
+                        val startIndex = it.indexOf("filename=")
+                        if (startIndex != -1) {
+                            if (resultBean.fileName.isEmpty()) {
+                                resultBean.fileName = URLDecoder.decode(it.substring(startIndex + "filename=".length).trim(), Charsets.UTF_8.name())
+                            }
+                        }
                     }
-                    resultBean.file = ZyHttpConfig.iResponseParser.parserDownloadResponse(it, resultBean)
+                    if (resultBean.fileName.isEmpty()) {
+
+                        resultBean.fileName = resultBean.url.substring(response.request.url.toString().lastIndexOf("/") + 1).replace("?", "_")
+                        resultBean.contentType = MimeTypeMap.getFileExtensionFromUrl(resultBean.fileName)
+                    }
+                    val contentType = response.headers["content-type"]?.takeIf { it.isNotEmpty() }
+                    contentType?.split(";".toRegex())?.dropLastWhile { it.isEmpty() }?.first()?.trim()?.let {
+                        resultBean.contentType = it
+                        resultBean.extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(it) ?: ""
+                    }
+                    ZyHttpConfig.iResponseParser.parserDownloadResponse(body, resultBean)
                 }
             }
         }

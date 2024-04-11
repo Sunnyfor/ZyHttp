@@ -104,13 +104,13 @@ object ZyHttpConfig {
     /**
      * 读取超时时间，单位毫秒
      */
-    var READ_TIME_OUT = 10 * 1000L
+    var READ_TIME_OUT = 20 * 1000L
 
 
     /**
      * 写入超时时间，单位毫秒
      */
-    var WRITE_TIME_OUT = 10 * 1000L
+    var WRITE_TIME_OUT = 20 * 1000L
 
 
     /**
@@ -127,11 +127,6 @@ object ZyHttpConfig {
      */
     var logInterceptor: Interceptor = DefaultLogInterceptor()
 
-
-    /**
-     * 扩展的拦截器
-     */
-    var extendInterceptor: Interceptor? = null
 
 
     /**

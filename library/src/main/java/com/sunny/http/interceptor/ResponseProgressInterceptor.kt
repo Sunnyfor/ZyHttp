@@ -13,7 +13,8 @@ import okhttp3.Response
  * Mail sunnyfor98@gmail.com
  * Date 2020/8/24
  */
-class DefaultNetworkInterceptor : Interceptor {
+class ResponseProgressInterceptor : Interceptor {
+
     override fun intercept(chain: Interceptor.Chain): Response {
         val originalResponse = chain.proceed(chain.request())
         val downLoadResultBean = originalResponse.request.tag(DownLoadResultBean::class.java)
@@ -22,12 +23,23 @@ class DefaultNetworkInterceptor : Interceptor {
                 downLoadResultBean?.let {
                     it.contentLength = contentLength
                     it.readLength = bytesRead
-                    if (contentLength > 0L) {
-                        val progress = (bytesRead * 100L / contentLength).toInt()
-                        it.progress = progress
+                    it.downloadDone = done
+                    if (done) {
+                        it.downloadEndTimeMillis = System.currentTimeMillis()
                     }
-                    downLoadResultBean.scope?.launch(Dispatchers.Main) {
-                        it.notifyData(it)
+
+                    if (contentLength > 0L) {
+                        it.progress = (bytesRead * 100L / contentLength).toInt()
+                    }
+
+                    val lastDataUpdateTimeMillis = it.attachment["lastDataUpdateTimeMillis"] as? Long ?: 0L
+                    val currentTimeMillis = System.currentTimeMillis()
+
+                    if (currentTimeMillis - lastDataUpdateTimeMillis >= 500 || done) {
+                        it.attachment["lastDataUpdateTimeMillis"] = currentTimeMillis
+                        it.scope?.launch(Dispatchers.Main) {
+                            it.onDownloadProgressListener?.invoke(it)
+                        }
                     }
                 }
             }

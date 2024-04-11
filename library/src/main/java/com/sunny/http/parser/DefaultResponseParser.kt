@@ -1,11 +1,14 @@
 package com.sunny.http.parser
 
+import androidx.documentfile.provider.DocumentFile
 import com.google.gson.Gson
 import com.sunny.http.bean.DownLoadResultBean
 import com.sunny.http.bean.HttpResultBean
-import com.sunny.kit.utils.FileUtil
+import com.sunny.kit.utils.application.ZyKit
 import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import okhttp3.ResponseBody
 import java.io.File
 import java.io.FileOutputStream
@@ -41,8 +44,8 @@ open class DefaultResponseParser : IResponseParser {
     override fun parserDownloadResponse(
         responseBody: ResponseBody,
         downLoadResultBean: DownLoadResultBean
-    ): File {
-        return writeResponseBodyToDisk(responseBody.byteStream(), downLoadResultBean)
+    ) {
+        writeResponseBodyToDisk(responseBody.byteStream(), downLoadResultBean)
     }
 
 
@@ -52,36 +55,39 @@ open class DefaultResponseParser : IResponseParser {
     private fun writeResponseBodyToDisk(
         data: InputStream,
         downLoadResultBean: DownLoadResultBean
-    ): File {
+    ) {
 
-        if (downLoadResultBean.filePath == null) {
-            downLoadResultBean.filePath = FileUtil.getCacheDir()
+        //初始化文件名
+        if (!downLoadResultBean.fileName.contains(".")) {
+            downLoadResultBean.fileName += ".${downLoadResultBean.extension}"
         }
 
-        val pathFile = File(downLoadResultBean.filePath ?: "")
-        if (!pathFile.exists()) {
-            pathFile.mkdirs()
-        }
+        val contentUri = downLoadResultBean.uri
 
-        var fileName = downLoadResultBean.fileName ?: ""
-        if (fileName.isEmpty()) {
-            fileName = "${System.currentTimeMillis()}.${downLoadResultBean.extension}"
+        val outputStream = if (contentUri == null) {
+            val pathFile = File(downLoadResultBean.filePath)
+            if (!pathFile.exists()) {
+                pathFile.mkdirs()
+            }
+
+            val file = File(pathFile, downLoadResultBean.fileName)
+            if (file.exists()) {
+                file.delete()
+            }
+            file.createNewFile()
+            FileOutputStream(file)
         } else {
-            if (!fileName.contains(".")) {
-                fileName += ".${downLoadResultBean.extension}"
+            val parentDocumentFile = DocumentFile.fromTreeUri(ZyKit.getContext(), contentUri)
+            parentDocumentFile?.findFile(downLoadResultBean.fileName)?.delete()
+            parentDocumentFile?.createFile(downLoadResultBean.contentType, downLoadResultBean.fileName)?.let {
+                ZyKit.getContext().contentResolver.openOutputStream(it.uri)
             }
         }
-        downLoadResultBean.fileName = fileName
-        val file = File(pathFile, fileName)
-        if (file.exists()) {
-            file.delete()
-        }
-        file.createNewFile()
 
         val byte = ByteArray(4096)
-        val outputStream = FileOutputStream(file)
         var totalRead = 0L
         downLoadResultBean.scope?.launch(IO) {
+            downLoadResultBean.diskWriteStartTimeMillis = System.currentTimeMillis()
             //写入文件
             while (true) {
                 val read = data.read(byte)
@@ -89,12 +95,18 @@ open class DefaultResponseParser : IResponseParser {
                     break
                 }
                 totalRead += read
-                outputStream.write(byte, 0, read)
+                outputStream?.write(byte, 0, read)
             }
-            downLoadResultBean.done = totalRead == downLoadResultBean.readLength
+            outputStream?.flush()
+            outputStream?.close()
+            if (totalRead == downLoadResultBean.readLength) {
+                downLoadResultBean.diskWriteDone = true
+                downLoadResultBean.diskWriteEndTimeMillis = System.currentTimeMillis()
+            }
+            withContext(Main) {
+                downLoadResultBean.onDownloadProgressListener?.invoke(downLoadResultBean)
+            }
         }
-        outputStream.flush()
-        return file
     }
 
 }
