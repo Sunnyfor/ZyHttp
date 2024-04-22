@@ -118,6 +118,10 @@ object ZyHttpConfig {
      */
     var CALL_TIME_OUT = 0L
 
+
+    var MAX_RESPONSE_BODY_SIZE = 6 * 1024 * 1024
+
+
     val headerInterceptor: DefaultHeaderInterceptor by lazy {
         DefaultHeaderInterceptor()
     }
@@ -126,7 +130,6 @@ object ZyHttpConfig {
      * Log拦截器
      */
     var logInterceptor: Interceptor = DefaultLogInterceptor()
-
 
 
     /**

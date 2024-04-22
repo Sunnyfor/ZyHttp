@@ -1,16 +1,18 @@
 package com.sunny.http.interceptor
 
+import com.sunny.http.ZyHttpConfig
 import com.sunny.http.bean.DownLoadResultBean
-import com.sunny.http.utils.isProbablyUtf8
 import com.sunny.kit.utils.application.ZyKit
 import okhttp3.Interceptor
 import okhttp3.Response
 import okhttp3.internal.http.promisesBody
 import okio.Buffer
 import okio.GzipSource
+import okio.InflaterSource
 import java.io.IOException
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.TimeUnit
+import java.util.zip.Inflater
 
 /**
  * Desc Log日志拦截器
@@ -56,28 +58,51 @@ class DefaultLogInterceptor : Interceptor {
 
         //头信息
         endLogSb.append(response.headers.joinToString("\n") { it.first + ": " + it.second })
+        endLogSb.append("\n")
 
         if (response.promisesBody()) {
-            responseBody?.source()?.let {
+            responseBody?.source()?.let { bufferResource ->
+                val downLoadResultBean = request.tag(DownLoadResultBean::class.java)
+                if (downLoadResultBean != null) {
+                    endLogSb.append("fileName：${downLoadResultBean.fileName} fileSize：${ZyKit.file.formatFileSize(responseBody.contentLength())} body omitted")
+                } else {
+                    val contentLength = responseBody.contentLength()
+                    if (contentLength == -1L) {
+                        endLogSb.append("unknown body size  omitted")
+                    } else if (contentLength <= ZyHttpConfig.MAX_RESPONSE_BODY_SIZE) {
+                        bufferResource.request(Long.MAX_VALUE)
+                        val buffer = when (response.headers["Content-Encoding"]?.lowercase()) {
+                            "gzip" -> {
+                                // 如果是gzip压缩的，进行解压
+                                bufferResource.request(Long.MAX_VALUE)
+                                GzipSource(bufferResource.buffer.clone()).use {
+                                    Buffer().apply {
+                                        writeAll(it)
+                                    }
+                                }
+                            }
 
-                it.request(Long.MAX_VALUE)
-                var buffer = it.buffer.clone()
-                if ("gzip".equals(response.headers["Content-Encoding"], ignoreCase = true)) {
-                    // 如果是gzip压缩的，进行解压
-                    GzipSource(buffer).use {
-                        buffer = Buffer()
-                        buffer.writeAll(it)
+                            "deflate" -> {
+                                // 如果是deflate压缩的，进行解压
+                                bufferResource.request(Long.MAX_VALUE)
+                                InflaterSource(bufferResource.buffer.clone(), Inflater(true)).use {
+                                    Buffer().apply {
+                                        writeAll(it)
+                                    }
+                                }
+                            }
+
+                            else -> {
+                                // 不是压缩的或未知的编码，直接使用原始缓冲区
+                                bufferResource.buffer.clone()
+                            }
+                        }
+                        val result = buffer.readString(StandardCharsets.UTF_8)
+                        endLogSb.append(result.replace(Regex("[\\s\\n]+"), ""))
+                    } else {
+                        endLogSb.append("body size greater than ${ZyHttpConfig.MAX_RESPONSE_BODY_SIZE} omitted")
                     }
                 }
-                endLogSb.append("\n")
-                val downLoadResultBean = request.tag(DownLoadResultBean::class.java)
-                if (downLoadResultBean != null || !buffer.isProbablyUtf8()) {
-                    endLogSb.append("binary ${buffer.size}-byte body omitted")
-                } else {
-                    val result = buffer.readString(StandardCharsets.UTF_8)
-                    endLogSb.append(result.replace(Regex("[\\s\\n]+"), ""))
-                }
-
             }
         }
         ZyKit.log.w("请求结束", endLogSb.toString(), false)
