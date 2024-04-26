@@ -1,12 +1,13 @@
 package com.sunny.http.response
 
-import android.webkit.MimeTypeMap
+import android.net.Uri
 import com.sunny.http.ZyHttp
 import com.sunny.http.ZyHttpConfig
+import com.sunny.http.bean.BaseHttpResultBean
 import com.sunny.http.bean.DownLoadResultBean
 import com.sunny.http.bean.HttpResultBean
 import okhttp3.Request
-import java.net.URLDecoder
+import okhttp3.Response
 
 
 /**
@@ -17,35 +18,28 @@ import java.net.URLDecoder
  */
 open class DefaultHttpExecute : IHttpExecute {
 
+    /**
+     * 执行下载文件
+     */
     override fun executeDownload(request: Request, resultBean: DownLoadResultBean) {
+        resultBean.reset()
         resultBean.call = ZyHttp.clientFactory.getOkHttpClient().newCall(request)
         resultBean.call?.execute()?.let { response ->
-            //获取HTTP状态码
-            resultBean.httpCode = response.code
-            //获取Response回执信息
-            resultBean.message = response.message
-            //获取请求URL
-            resultBean.url = request.url.toString()
+            populateHttpResultBean(resultBean, response)
             if (response.isSuccessful) {
                 response.body?.let { body ->
-                    response.header("Content-Disposition")?.let {
-                        // 查找filename参数并解码
-                        val startIndex = it.indexOf("filename=")
-                        if (startIndex != -1) {
-                            if (resultBean.fileName.isEmpty()) {
-                                resultBean.fileName = URLDecoder.decode(it.substring(startIndex + "filename=".length).trim(), Charsets.UTF_8.name())
-                            }
+                    if (resultBean.fileName.isEmpty()) {
+                        val contentDisposition = response.header("Content-Disposition")
+                        if (contentDisposition != null) {
+                            val matcher = Regex("filename=\"(.+?)\"").find(contentDisposition)
+                            resultBean.fileName = Uri.decode(matcher?.groupValues?.get(1))
+                        } else {
+                            resultBean.fileName = resultBean.url.substringAfterLast("/").replace("?", "_")
                         }
                     }
-                    if (resultBean.fileName.isEmpty()) {
-
-                        resultBean.fileName = resultBean.url.substring(response.request.url.toString().lastIndexOf("/") + 1).replace("?", "_")
-                        resultBean.contentType = MimeTypeMap.getFileExtensionFromUrl(resultBean.fileName)
-                    }
-                    val contentType = response.headers["content-type"]?.takeIf { it.isNotEmpty() }
-                    contentType?.split(";".toRegex())?.dropLastWhile { it.isEmpty() }?.first()?.trim()?.let {
-                        resultBean.contentType = it
-                        resultBean.extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(it) ?: ""
+                    val contentType = body.contentType()
+                    if (contentType != null) {
+                        resultBean.contentType = contentType.toString()
                     }
                     ZyHttpConfig.iResponseParser.parserDownloadResponse(body, resultBean)
                 }
@@ -53,16 +47,13 @@ open class DefaultHttpExecute : IHttpExecute {
         }
     }
 
+    /**
+     * 执行网络请求
+     */
     override fun <T> executeHttp(request: Request, resultBean: HttpResultBean<T>) {
         resultBean.call = ZyHttp.clientFactory.getOkHttpClient().newCall(request)
         resultBean.call?.execute()?.let { response ->
-            //获取HTTP状态码
-            resultBean.httpCode = response.code
-            //获取Response回执信息
-            resultBean.message = response.message
-            //获取响应URL
-            resultBean.resUrl = response.request.url.toString()
-
+            populateHttpResultBean(resultBean, response)
             if (response.isSuccessful) {
                 response.body?.let {
                     resultBean.bean = ZyHttpConfig.iResponseParser.parserHttpResponse(it, resultBean)
@@ -71,4 +62,18 @@ open class DefaultHttpExecute : IHttpExecute {
         }
     }
 
+
+    /**
+     * 填充HttpResultBean
+     */
+    private fun populateHttpResultBean(httpResultBean: BaseHttpResultBean, response: Response) {
+        //获取请求是否成功
+        httpResultBean.httpIsSuccess = response.isSuccessful
+        //获取HTTP状态码
+        httpResultBean.httpCode = response.code
+        //获取Response回执信息
+        httpResultBean.message = response.message
+        //获取响应URL
+        httpResultBean.resUrl = Uri.decode(response.request.url.toString())
+    }
 }

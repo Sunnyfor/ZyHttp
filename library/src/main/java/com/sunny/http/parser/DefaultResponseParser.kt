@@ -58,13 +58,12 @@ open class DefaultResponseParser : IResponseParser {
     ) {
 
         //初始化文件名
-        if (!downLoadResultBean.fileName.contains(".")) {
-            downLoadResultBean.fileName += ".${downLoadResultBean.extension}"
-        }
-
         val contentUri = downLoadResultBean.uri
 
         val outputStream = if (contentUri == null) {
+            if (downLoadResultBean.filePath.isEmpty()) {
+                downLoadResultBean.filePath = ZyKit.file.getExternalFilesDir("download")
+            }
             val pathFile = File(downLoadResultBean.filePath)
             if (!pathFile.exists()) {
                 pathFile.mkdirs()
@@ -79,7 +78,7 @@ open class DefaultResponseParser : IResponseParser {
         } else {
             val parentDocumentFile = DocumentFile.fromTreeUri(ZyKit.getContext(), contentUri)
             parentDocumentFile?.findFile(downLoadResultBean.fileName)?.delete()
-            parentDocumentFile?.createFile(downLoadResultBean.contentType, downLoadResultBean.fileName)?.let {
+            parentDocumentFile?.createFile("", downLoadResultBean.fileName)?.let {
                 ZyKit.getContext().contentResolver.openOutputStream(it.uri)
             }
         }
@@ -87,24 +86,26 @@ open class DefaultResponseParser : IResponseParser {
         val byte = ByteArray(4096)
         var totalRead = 0L
         downLoadResultBean.scope?.launch(IO) {
-            downLoadResultBean.diskWriteStartTimeMillis = System.currentTimeMillis()
-            //写入文件
-            while (true) {
-                val read = data.read(byte)
-                if (read == -1) {
-                    break
+            runCatching {
+                downLoadResultBean.diskWriteStartTimeMillis = System.currentTimeMillis()
+                //写入文件
+                while (true) {
+                    val read = data.read(byte)
+                    if (read == -1) {
+                        break
+                    }
+                    totalRead += read
+                    outputStream?.write(byte, 0, read)
                 }
-                totalRead += read
-                outputStream?.write(byte, 0, read)
-            }
-            outputStream?.flush()
-            outputStream?.close()
-            if (totalRead == downLoadResultBean.readLength) {
+                outputStream?.flush()
+                outputStream?.close()
                 downLoadResultBean.diskWriteDone = true
                 downLoadResultBean.diskWriteEndTimeMillis = System.currentTimeMillis()
-            }
-            withContext(Main) {
-                downLoadResultBean.onDownloadProgressListener?.invoke(downLoadResultBean)
+                withContext(Main) {
+                    downLoadResultBean.onDownloadProgress(downLoadResultBean)
+                }
+            }.onFailure {
+                ZyKit.log.e("Exception", it.message ?: "")
             }
         }
     }

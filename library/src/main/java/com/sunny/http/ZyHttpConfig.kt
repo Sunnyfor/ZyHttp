@@ -7,7 +7,7 @@ import com.sunny.http.parser.DefaultResponseParser
 import com.sunny.http.parser.IResponseParser
 import com.sunny.http.utils.ZyCookieJar
 import okhttp3.Interceptor
-import java.util.regex.Pattern
+import java.net.URL
 import javax.net.ssl.HostnameVerifier
 
 /**
@@ -21,80 +21,64 @@ object ZyHttpConfig {
     /**
      * IP地址
      */
-    var IP = "127.0.0.1" // 内网测试地址
+    private var IP = "127.0.0.1" // 内网测试地址
 
     /**
      * 端口
      */
-    var PORT = "80"
+    private var PORT = "-1"
 
     /**
      * 前缀：http? https
      */
-    var HOST_PREFIX = "http"
+    private var PROTOCOL = "http"
 
     /**
      * 后缀
      */
-    var HOST_SPACE = ""
+    private var PATH = ""
 
     /**
      * 域名变量
      */
     var HOST: String = ""
         set(value) {
-            field = value
-            val mValueSb = StringBuilder(value)
-            val prefixPattern = "^(http|https|ftp)://"
-            val prefix = Pattern.compile(prefixPattern).matcher(mValueSb)
-
-            if (prefix.find()) {
-                val group = prefix.group()
-                HOST_PREFIX = group.replace("://", "")
-                mValueSb.delete(mValueSb.indexOf(group), group.length)
+            var mValue = value.replace(" ","")
+            if (!mValue.contains("://")) {
+                //默认Http协议
+                mValue = "http://$value"
             }
-
-            val portPattern = ":\\d+"
-            val port = Pattern.compile(portPattern).matcher(mValueSb)
-            if (port.find()) {
-                val group = port.group()
-                val startIndex = mValueSb.indexOf(group) + group.length
-                val endIndex = mValueSb.length
-                HOST_SPACE = if (startIndex < endIndex) {
-                    mValueSb.substring(startIndex, endIndex)
-                } else {
-                    ""
-                }
-                PORT = group.replace(":", "")
-                mValueSb.delete(mValueSb.indexOf(group), mValueSb.length)
-            } else {
-                PORT = when (HOST_PREFIX) {
-                    "ftp" -> "21"
-                    "https" -> "443"
-                    else -> "80"
-                }
+            field = mValue
+            runCatching {
+                val url = URL(value)
+                PORT = url.port.toString()
+                IP = url.host
+                PROTOCOL = url.protocol
+                PATH = url.path
+            }.onFailure {
+                HOST = "$PROTOCOL://$value"
             }
-            if (mValueSb.contains("/")) {
-                val spaceSb = StringBuilder()
-                val values = mValueSb.split("/")
-                values.forEachIndexed { index, s ->
-                    if (index == 0) {
-                        IP = s
-                    } else {
-                        spaceSb.append("/")
-                        spaceSb.append(s)
-                    }
-                }
-                HOST_SPACE = spaceSb.toString()
-            } else {
-                IP = mValueSb.toString()
-            }
-
-        }
-        get() {
-            return "$HOST_PREFIX://$IP${if (PORT == "80") "" else ":$PORT"}$HOST_SPACE"
         }
 
+    /**
+     * 获取IP
+     */
+    fun getIP() = IP
+
+    /**
+     * 获取端口
+     */
+    fun getPort() = PORT
+
+    /**
+     * 获取协议
+     */
+    fun getProtocol() = PROTOCOL
+
+    /**
+     * 获取路径
+     */
+    fun getPath() = PATH
 
     /**
      * 连接超时时间，单位毫秒
@@ -119,7 +103,10 @@ object ZyHttpConfig {
     var CALL_TIME_OUT = 0L
 
 
-    var MAX_RESPONSE_BODY_SIZE = 6 * 1024 * 1024
+    /**
+     * 打印最大响应内容
+     */
+    var LOG_MAX_RESPONSE_BODY_SIZE = 6 * 1024 * 1024
 
 
     val headerInterceptor: DefaultHeaderInterceptor by lazy {
@@ -155,20 +142,9 @@ object ZyHttpConfig {
      */
     var hostnameVerifier: HostnameVerifier = HostnameVerifier { _, _ -> true }
 
-
     /**
      * 网络请求全局回调
      */
     var httpResultCallback: ((resultBean: BaseHttpResultBean) -> Unit)? = null
-
-    /**
-     * 是否打印LOG
-     */
-    var isPrintLog = true
-
-    /**
-     * 设置Log标签名
-     */
-    var logTag = "ZYLog"
 
 }

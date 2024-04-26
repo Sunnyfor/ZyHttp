@@ -1,8 +1,6 @@
 package com.sunny.http.bean
 
 import android.net.Uri
-import com.sunny.kit.utils.application.ZyKit
-import java.util.UUID
 
 /**
  * Desc 下载结果实体类
@@ -10,23 +8,9 @@ import java.util.UUID
  * Mail sunnyfor98@gmail.com
  * Date 2020/8/24
  */
-class DownLoadResultBean() :
-    BaseHttpResultBean() {
+abstract class DownLoadResultBean : BaseHttpResultBean() {
 
-    constructor(fileName: String, uri: Uri?) : this() {
-        this.fileName = fileName
-        this.uri = uri
-    }
-
-    constructor(fileName: String, filePath: String) : this() {
-        this.fileName = fileName
-        this.filePath = filePath
-    }
-
-
-    val id = UUID.randomUUID().toString()
     var fileName: String = ""
-    var extension = "unknown" //文件扩展名
     var uri: Uri? = null
     var contentType = "" //文件类型
     var contentLength = 0L //数据长度
@@ -34,16 +18,34 @@ class DownLoadResultBean() :
     var downloadDone = false //网络传输完成状态
     var diskWriteDone = false //磁盘写入完成状态
     var progress = 0 //下载进度百分比
-    var filePath = ZyKit.file.getExternalFilesDir("download")
+    var filePath = ""
     var downloadStartTimeMillis = System.currentTimeMillis() //开始下载时间
     var downloadEndTimeMillis = 0L //下载结束时间
     var diskWriteStartTimeMillis = 0L //磁盘写入开始时间
     var diskWriteEndTimeMillis = 0L //磁盘写入结束时间
-    var onDownloadProgressListener: ((resultBean: DownLoadResultBean) -> Unit)? = null //下载进度监听
+    val attachment: MutableMap<String, Any> = HashMap() //附件
 
-    var attachment: MutableMap<String, Any> = HashMap() //附件
-
+    /**
+     * 判断下载是否完成
+     */
     fun isDone() = downloadDone && diskWriteDone
+
+    /**
+     * 重置下载状态
+     */
+    fun reset() {
+        contentType = ""
+        contentLength = 0L
+        readLength = 0L
+        downloadDone = false
+        diskWriteDone = false
+        progress = 0
+        downloadStartTimeMillis = System.currentTimeMillis()
+        downloadEndTimeMillis = 0L
+        diskWriteStartTimeMillis = 0L
+        diskWriteEndTimeMillis = 0L
+        attachment.clear()
+    }
 
     /**
      * 获取下载时长
@@ -68,21 +70,9 @@ class DownLoadResultBean() :
     }
 
 
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as DownLoadResultBean
-
-        return id == other.id
-    }
-
-    override fun hashCode(): Int {
-        return id.hashCode()
-    }
-
     override fun toString(): String {
-        return "DownLoadResultBean(${super.toString()},id='$id', fileName='$fileName', extension='$extension', uri=$uri, contentLength=$contentLength, readLength=$readLength, networkTransferDone=$downloadDone, diskWriteDone=$diskWriteDone, progress=$progress, filePath='$filePath', downloadStartTimeMillis=$downloadStartTimeMillis, downloadEndTimeMillis=$downloadEndTimeMillis, diskWriteStartTimeMillis=$diskWriteStartTimeMillis, diskWriteEndTimeMillis=$diskWriteEndTimeMillis)"
+        return "DownLoadResultBean(${super.toString()}, fileName='$fileName', uri=$uri, contentLength=$contentLength, readLength=$readLength, networkTransferDone=$downloadDone, diskWriteDone=$diskWriteDone, progress=$progress, filePath='$filePath', downloadStartTimeMillis=$downloadStartTimeMillis, downloadEndTimeMillis=$downloadEndTimeMillis, diskWriteStartTimeMillis=$diskWriteStartTimeMillis, diskWriteEndTimeMillis=$diskWriteEndTimeMillis)"
     }
 
+    abstract fun onDownloadProgress(downLoadResultBean: DownLoadResultBean)
 }

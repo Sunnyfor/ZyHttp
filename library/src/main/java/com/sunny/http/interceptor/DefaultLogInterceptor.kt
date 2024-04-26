@@ -1,6 +1,7 @@
 package com.sunny.http.interceptor
 
 import com.sunny.http.ZyHttpConfig
+import com.sunny.http.bean.BaseHttpResultBean
 import com.sunny.http.bean.DownLoadResultBean
 import com.sunny.kit.utils.application.ZyKit
 import okhttp3.Interceptor
@@ -61,15 +62,16 @@ class DefaultLogInterceptor : Interceptor {
         endLogSb.append("\n")
 
         if (response.promisesBody()) {
+            endLogSb.append("\n")
             responseBody?.source()?.let { bufferResource ->
-                val downLoadResultBean = request.tag(DownLoadResultBean::class.java)
-                if (downLoadResultBean != null) {
-                    endLogSb.append("fileName：${downLoadResultBean.fileName} fileSize：${ZyKit.file.formatFileSize(responseBody.contentLength())} body omitted")
+                val httpResultBean = request.tag(BaseHttpResultBean::class.java)
+                if (httpResultBean is DownLoadResultBean) {
+                    endLogSb.append("${ZyKit.file.formatFileSize(responseBody.contentLength())} size body omitted")
                 } else {
                     val contentLength = responseBody.contentLength()
                     if (contentLength == -1L) {
-                        endLogSb.append("unknown body size  omitted")
-                    } else if (contentLength <= ZyHttpConfig.MAX_RESPONSE_BODY_SIZE) {
+                        endLogSb.append("unknown size body omitted")
+                    } else if (contentLength <= ZyHttpConfig.LOG_MAX_RESPONSE_BODY_SIZE) {
                         bufferResource.request(Long.MAX_VALUE)
                         val buffer = when (response.headers["Content-Encoding"]?.lowercase()) {
                             "gzip" -> {
@@ -100,7 +102,7 @@ class DefaultLogInterceptor : Interceptor {
                         val result = buffer.readString(StandardCharsets.UTF_8)
                         endLogSb.append(result.replace(Regex("[\\s\\n]+"), ""))
                     } else {
-                        endLogSb.append("body size greater than ${ZyHttpConfig.MAX_RESPONSE_BODY_SIZE} omitted")
+                        endLogSb.append("greater than ${ZyHttpConfig.LOG_MAX_RESPONSE_BODY_SIZE} size body omitted")
                     }
                 }
             }

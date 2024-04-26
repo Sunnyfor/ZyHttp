@@ -2,6 +2,7 @@
 
 package com.sunny.http
 
+import android.net.Uri
 import com.sunny.http.bean.BaseHttpResultBean
 import com.sunny.http.bean.DownLoadResultBean
 import com.sunny.http.bean.HttpResultBean
@@ -196,10 +197,10 @@ object ZyHttp {
         try {
             httpResultBean.scope = scope
             //请求URL赋值
-            httpResultBean.url = request.url.toString()
+            httpResultBean.url = Uri.decode(request.url.toString())
+            val newRequest = request.newBuilder().tag(BaseHttpResultBean::class.java, httpResultBean).build()
             //执行异步网络请求
             if (httpResultBean is DownLoadResultBean) {
-                val newRequest = request.newBuilder().tag(DownLoadResultBean::class.java, httpResultBean).build()
                 httpExecute.executeDownload(newRequest, httpResultBean)
             } else if (httpResultBean is HttpResultBean<*>) {
                 httpExecute.executeHttp(request, httpResultBean)
@@ -208,7 +209,6 @@ object ZyHttp {
             //出现异常获取异常信息
             httpResultBean.exception = e
             httpResultBean.message = e.message ?: ""
-            e.printStackTrace()
             ZyKit.log.e("发生异常->:$httpResultBean")
         }
 

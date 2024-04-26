@@ -24,11 +24,11 @@ abstract class HttpResultBean<T> : BaseHttpResultBean() {
     var bean: T? = null
 
     fun isSuccess(flag:Boolean = true):Boolean{
-        return httpIsSuccess() && flag
+        return httpIsSuccess && flag
     }
 
     override fun toString(): String {
-        return "${super.toString()} HttpResultBean(typeToken=$type, bean=$bean)"
+        return "HttpResultBean(${super.toString()}typeToken=$type, bean=$bean)"
     }
 
 }

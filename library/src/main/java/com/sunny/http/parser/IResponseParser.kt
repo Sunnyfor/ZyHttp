@@ -3,7 +3,6 @@ package com.sunny.http.parser
 import com.sunny.http.bean.DownLoadResultBean
 import com.sunny.http.bean.HttpResultBean
 import okhttp3.ResponseBody
-import java.io.File
 
 /**
  * Desc 数据解析

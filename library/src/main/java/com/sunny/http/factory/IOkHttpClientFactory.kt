@@ -1,6 +1,5 @@
 package com.sunny.http.factory
 
-import com.sunny.http.bean.DownLoadResultBean
 import okhttp3.OkHttpClient
 
 /**

@@ -1,5 +1,6 @@
 package com.sunny.http.interceptor
 
+import com.sunny.http.bean.BaseHttpResultBean
 import com.sunny.http.bean.DownLoadResultBean
 import com.sunny.http.body.ProgressResponseBody
 import kotlinx.coroutines.Dispatchers
@@ -17,34 +18,37 @@ class ResponseProgressInterceptor : Interceptor {
 
     override fun intercept(chain: Interceptor.Chain): Response {
         val originalResponse = chain.proceed(chain.request())
-        val downLoadResultBean = originalResponse.request.tag(DownLoadResultBean::class.java)
-        val progressResponseListener = object : ProgressResponseBody.ProgressResponseListener {
-            override fun onResponseProgress(bytesRead: Long, contentLength: Long, done: Boolean) {
-                downLoadResultBean?.let {
-                    it.contentLength = contentLength
-                    it.readLength = bytesRead
-                    it.downloadDone = done
-                    if (done) {
-                        it.downloadEndTimeMillis = System.currentTimeMillis()
+        val httpResultBean = originalResponse.request.tag(BaseHttpResultBean::class.java)
+        if (httpResultBean is DownLoadResultBean) {
+            val progressResponseListener = object : ProgressResponseBody.ProgressResponseListener {
+                override fun onProgress(bytesRead: Long, contentLength: Long) {
+                    httpResultBean.contentLength = contentLength
+                    httpResultBean.readLength = bytesRead
+                    httpResultBean.downloadDone = bytesRead == contentLength
+
+                    if (httpResultBean.downloadDone) {
+                        httpResultBean.downloadEndTimeMillis = System.currentTimeMillis()
                     }
 
                     if (contentLength > 0L) {
-                        it.progress = (bytesRead * 100L / contentLength).toInt()
-                    }
-
-                    val lastDataUpdateTimeMillis = it.attachment["lastDataUpdateTimeMillis"] as? Long ?: 0L
-                    val currentTimeMillis = System.currentTimeMillis()
-
-                    if (currentTimeMillis - lastDataUpdateTimeMillis >= 500 || done) {
-                        it.attachment["lastDataUpdateTimeMillis"] = currentTimeMillis
-                        it.scope?.launch(Dispatchers.Main) {
-                            it.onDownloadProgressListener?.invoke(it)
+                        val lastProgress = httpResultBean.progress
+                        httpResultBean.progress = (bytesRead * 100L / contentLength).toInt()
+                        val lastUpdateTimeMillis = httpResultBean.attachment["lastUpdateTimeMillis"] as? Long ?: 0L
+                        val currentTimeMillis = System.currentTimeMillis()
+                        if (currentTimeMillis - lastUpdateTimeMillis > 500 && httpResultBean.progress != lastProgress) {
+                            httpResultBean.attachment["lastUpdateTimeMillis"] = currentTimeMillis
+                            httpResultBean.scope?.launch(Dispatchers.Main) {
+                                httpResultBean.onDownloadProgress(httpResultBean)
+                            }
                         }
                     }
                 }
             }
+            originalResponse.body?.let { responseBody ->
+                val body = ProgressResponseBody(responseBody, progressResponseListener)
+                return originalResponse.newBuilder().body(body).build()
+            }
         }
-        val body = ProgressResponseBody(originalResponse.body, progressResponseListener)
-        return originalResponse.newBuilder().body(body).build()
+        return originalResponse
     }
 }
