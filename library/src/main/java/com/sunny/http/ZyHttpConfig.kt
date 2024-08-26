@@ -43,7 +43,7 @@ object ZyHttpConfig {
      */
     var HOST: String = ""
         set(value) {
-            var mValue = value.replace(" ","")
+            var mValue = value.replace(" ", "")
             if (!mValue.contains("://")) {
                 //默认Http协议
                 mValue = "http://$value"
@@ -106,7 +106,8 @@ object ZyHttpConfig {
     /**
      * 打印最大响应内容
      */
-    var LOG_MAX_RESPONSE_BODY_SIZE = 6 * 1024 * 1024
+    var RESPONSE_BODY_MAX_LOG_SIZE = 2 * (1024 * 1024L)
+
 
 
     val headerInterceptor: DefaultHeaderInterceptor by lazy {

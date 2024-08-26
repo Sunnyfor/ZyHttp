@@ -3,6 +3,7 @@ package com.sunny.http.factory
 import com.sunny.http.ZyHttpConfig
 import com.sunny.http.interceptor.ResponseProgressInterceptor
 import com.sunny.http.utils.ZySSLSocketClient
+import com.sunny.kit.utils.application.glide.ZyAppGlideModule
 import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
 
@@ -22,16 +23,23 @@ class ZyOkHttpClientFactory : IOkHttpClientFactory {
     override fun getOkHttpClient(): OkHttpClient {
         if (okHttpClient == null) {
             okHttpClient = getBuild().build()
+            ZyAppGlideModule.okHttpClient = okHttpClient as OkHttpClient //关联Glide
         }
         return okHttpClient as OkHttpClient
     }
 
 
+    /**
+     * 清空OkHttpClient
+     */
     override fun onDestroy() {
         okHttpClient = null
 
     }
 
+    /**
+     * 获取OkHttpClient.Builder对象
+     */
     override fun getBuild(): OkHttpClient.Builder {
         return OkHttpClient.Builder()
             .addInterceptor(ZyHttpConfig.headerInterceptor)

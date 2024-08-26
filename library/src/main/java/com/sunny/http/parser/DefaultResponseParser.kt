@@ -30,7 +30,7 @@ open class DefaultResponseParser : IResponseParser {
         httpResultBean: HttpResultBean<T>
     ): T {
 
-        val type = httpResultBean.type
+        val type = httpResultBean.dataType
         val body = responseBody.string()
 
         if (type.toString() == String::class.java.toString()) {

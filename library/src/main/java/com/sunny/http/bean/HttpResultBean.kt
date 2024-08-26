@@ -11,24 +11,24 @@ import java.lang.reflect.Type
  */
 abstract class HttpResultBean<T> : BaseHttpResultBean() {
 
-    lateinit var type: Type
+    lateinit var dataType: Type
 
     init {
         javaClass.genericSuperclass?.let {
             if (it is ParameterizedType) {
-                type = it.actualTypeArguments[0]
+                dataType = it.actualTypeArguments[0]
             }
         }
     }
 
-    var bean: T? = null
+    var data: T? = null
 
     fun isSuccess(flag:Boolean = true):Boolean{
         return httpIsSuccess && flag
     }
 
     override fun toString(): String {
-        return "HttpResultBean(${super.toString()}typeToken=$type, bean=$bean)"
+        return "HttpResultBean(${super.toString()}dataType=$dataType, data=$data)"
     }
 
 }

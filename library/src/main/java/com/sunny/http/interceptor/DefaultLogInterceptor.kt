@@ -11,7 +11,6 @@ import okio.Buffer
 import okio.GzipSource
 import okio.InflaterSource
 import java.io.IOException
-import java.nio.charset.StandardCharsets
 import java.util.concurrent.TimeUnit
 import java.util.zip.Inflater
 
@@ -39,7 +38,7 @@ class DefaultLogInterceptor : Interceptor {
             startLogSb.append("\n")
             startLogSb.append("Params: $params")
         }
-        ZyKit.log.w("发起请求", startLogSb.toString(), false)
+        ZyKit.log.w("Network Request", startLogSb.toString(), false)
 
         val endLogSb = StringBuilder()
         val startNs = System.nanoTime()
@@ -48,13 +47,14 @@ class DefaultLogInterceptor : Interceptor {
             response = chain.proceed(request)
         } catch (e: Exception) {
             endLogSb.append(e.message)
-            ZyKit.log.w("请求结束", endLogSb.toString(), false)
+            ZyKit.log.w("Network Response", endLogSb.toString(), false)
             throw e
         }
 
         val tookMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNs)
-        val responseBody = response.body
-        endLogSb.append("${response.code}${if (response.message.isEmpty()) "" else ' ' + response.message} ${response.request.url} (${tookMs}ms)")
+        val responseBody = response.peekBody(ZyHttpConfig.RESPONSE_BODY_MAX_LOG_SIZE)
+        val status = if (response.isSuccessful) "\uD83D\uDFE2" else "\uD83D\uDD34"
+        endLogSb.append("${response.code}${if (response.message.isEmpty()) "" else ' ' + response.message} ${response.request.url} (${tookMs}ms) $status")
         endLogSb.append("\n")
 
         //头信息
@@ -62,52 +62,47 @@ class DefaultLogInterceptor : Interceptor {
         endLogSb.append("\n")
 
         if (response.promisesBody()) {
-            endLogSb.append("\n")
-            responseBody?.source()?.let { bufferResource ->
+            responseBody.source().let { bufferResource ->
                 val httpResultBean = request.tag(BaseHttpResultBean::class.java)
                 if (httpResultBean is DownLoadResultBean) {
                     endLogSb.append("${ZyKit.file.formatFileSize(responseBody.contentLength())} size body omitted")
                 } else {
-                    val contentLength = responseBody.contentLength()
-                    if (contentLength == -1L) {
-                        endLogSb.append("unknown size body omitted")
-                    } else if (contentLength <= ZyHttpConfig.LOG_MAX_RESPONSE_BODY_SIZE) {
-                        bufferResource.request(Long.MAX_VALUE)
-                        val buffer = when (response.headers["Content-Encoding"]?.lowercase()) {
-                            "gzip" -> {
-                                // 如果是gzip压缩的，进行解压
-                                bufferResource.request(Long.MAX_VALUE)
-                                GzipSource(bufferResource.buffer.clone()).use {
-                                    Buffer().apply {
-                                        writeAll(it)
-                                    }
+                    bufferResource.request(Long.MAX_VALUE)
+                    val buffer = when (response.headers["Content-Encoding"]?.lowercase()) {
+                        "gzip" -> {
+                            // 如果是gzip压缩的，进行解压
+                            GzipSource(bufferResource.buffer.clone()).use {
+                                Buffer().apply {
+                                    writeAll(it)
                                 }
-                            }
-
-                            "deflate" -> {
-                                // 如果是deflate压缩的，进行解压
-                                bufferResource.request(Long.MAX_VALUE)
-                                InflaterSource(bufferResource.buffer.clone(), Inflater(true)).use {
-                                    Buffer().apply {
-                                        writeAll(it)
-                                    }
-                                }
-                            }
-
-                            else -> {
-                                // 不是压缩的或未知的编码，直接使用原始缓冲区
-                                bufferResource.buffer.clone()
                             }
                         }
-                        val result = buffer.readString(StandardCharsets.UTF_8)
-                        endLogSb.append(result.replace(Regex("[\\s\\n]+"), ""))
-                    } else {
-                        endLogSb.append("greater than ${ZyHttpConfig.LOG_MAX_RESPONSE_BODY_SIZE} size body omitted")
+
+                        "deflate" -> {
+                            // 如果是deflate压缩的，进行解压
+                            InflaterSource(bufferResource.buffer.clone(), Inflater(true)).use {
+                                Buffer().apply {
+                                    writeAll(it)
+                                }
+                            }
+                        }
+
+                        else -> {
+                            // 不是压缩的或未知的编码，直接使用原始缓冲区
+                            bufferResource.buffer.clone()
+                        }
+                    }
+                    responseBody.contentType()?.let {
+                        if (it.type == "text" || it.type == "application") {
+                            val result = buffer.readUtf8()
+                            endLogSb.append("\n")
+                            endLogSb.append(result.replace(Regex("[\\s\\n]+"), ""))
+                        }
                     }
                 }
             }
         }
-        ZyKit.log.w("请求结束", endLogSb.toString(), false)
+        ZyKit.log.w("Network Response", endLogSb.toString(), false)
         return response
     }
 }

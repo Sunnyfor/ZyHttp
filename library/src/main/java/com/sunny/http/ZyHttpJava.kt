@@ -54,7 +54,7 @@ class ZyHttpJava(val scope: CoroutineScope) {
     private fun <T> createHttpResultBean(httpResult: HttpResult<T>?): HttpResultBean<T> {
         val httpResultBean = object : HttpResultBean<T>() {}
         httpResult?.let {
-            httpResultBean.type = it.type
+            httpResultBean.dataType = it.type
         }
         return httpResultBean
     }

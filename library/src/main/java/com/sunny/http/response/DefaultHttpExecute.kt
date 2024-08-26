@@ -56,7 +56,7 @@ open class DefaultHttpExecute : IHttpExecute {
             populateHttpResultBean(resultBean, response)
             if (response.isSuccessful) {
                 response.body?.let {
-                    resultBean.bean = ZyHttpConfig.iResponseParser.parserHttpResponse(it, resultBean)
+                    resultBean.data = ZyHttpConfig.iResponseParser.parserHttpResponse(it, resultBean)
                 }
             }
         }
@@ -74,6 +74,9 @@ open class DefaultHttpExecute : IHttpExecute {
         //获取Response回执信息
         httpResultBean.message = response.message
         //获取响应URL
-        httpResultBean.resUrl = Uri.decode(response.request.url.toString())
+        val resUrl = Uri.decode(response.request.url.toString())
+        if (resUrl != httpResultBean.url) {
+            httpResultBean.resUrl = resUrl
+        }
     }
 }
